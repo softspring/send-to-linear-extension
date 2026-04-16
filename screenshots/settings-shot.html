@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Send To Linear Settings Screenshot</title>
+    <style>
+      :root {
+        --bg: #f4efe7;
+        --ink: #1e1a16;
+        --muted: #6d6258;
+        --line: #dccfc1;
+        --accent: #0f766e;
+        --accent-soft: #d7f3ee;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.18), transparent 30%),
+          linear-gradient(180deg, #f7f1ea 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+      .frame {
+        width: 1280px;
+        height: 800px;
+        padding: 40px;
+      }
+      .panel {
+        height: 100%;
+        padding: 32px;
+        background: rgba(255, 253, 248, 0.95);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: 0 20px 70px rgba(49, 35, 19, 0.12);
+      }
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent);
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      h1 { margin: 0; font-size: 56px; }
+      .intro {
+        width: 760px;
+        margin: 14px 0 24px;
+        color: var(--muted);
+        font-size: 24px;
+        line-height: 1.6;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 22px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: white;
+        padding: 24px;
+      }
+      .label {
+        display: block;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .input {
+        height: 56px;
+        padding: 0 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        color: var(--muted);
+      }
+      .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 18px;
+        font-size: 20px;
+      }
+      .square {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: var(--accent);
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+      }
+      .button {
+        padding: 14px 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .primary { background: var(--accent); color: white; }
+      .secondary { background: var(--accent-soft); color: var(--accent); }
+      .tertiary { border: 1px solid var(--line); color: var(--ink); }
+      .status {
+        margin-top: 18px;
+        color: var(--accent);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .count {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+      .teams-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .teams-head h2 { margin: 0; font-size: 24px; }
+      .team {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fffdfa;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .team + .team { margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="panel">
+        <p class="eyebrow">Chrome Extension</p>
+        <h1>Send To Linear</h1>
+        <p class="intro">
+          Save a key, sync your teams, then create Linear issues from selected text in Chrome.
+        </p>
+        <div class="grid">
+          <div class="card">
+            <span class="label">Linear OAuth client ID</span>
+            <div class="input">Paste your Linear OAuth client ID</div>
+            <div class="hint">Register a Linear OAuth app and add the extension redirect URL in Linear.</div>
+            <div class="check"><span class="square"></span><span>Open the created issue in a new tab</span></div>
+            <div class="actions">
+              <div class="button primary">Connect to Linear</div>
+              <div class="button secondary">Refresh teams</div>
+              <div class="button tertiary">Disconnect</div>
+            </div>
+            <div class="status">Connected to Linear and synced 3 team(s).</div>
+          </div>
+          <div class="card">
+            <div class="teams-head">
+              <h2>Cached teams</h2>
+              <div class="count">3</div>
+            </div>
+            <div class="team">Customer Platform</div>
+            <div class="team">Operations</div>
+            <div class="team">Growth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
