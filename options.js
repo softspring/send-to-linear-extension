@@ -1,6 +1,6 @@
 const form = document.querySelector("#settings-form");
-const clientIdInput = document.querySelector("#client-id");
 const redirectUriNode = document.querySelector("#redirect-uri");
+const clientIdNoteNode = document.querySelector("#client-id-note");
 const authSummaryNode = document.querySelector("#auth-summary");
 const openIssueInput = document.querySelector("#open-issue");
 const connectButton = document.querySelector("#connect-linear");
@@ -15,24 +15,12 @@ initialize();
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const linearClientId = clientIdInput.value.trim();
-  if (!linearClientId) {
-    renderStatus("Enter your Linear OAuth client ID.", true);
-    return;
-  }
-
   setBusy(true);
 
   try {
-    await chrome.storage.local.set({
-      linearClientId,
-      openIssueAfterCreate: openIssueInput.checked
-    });
+    await chrome.storage.local.set({ openIssueAfterCreate: openIssueInput.checked });
 
-    const response = await chrome.runtime.sendMessage({
-      type: "startOAuth",
-      clientId: linearClientId
-    });
+    const response = await chrome.runtime.sendMessage({ type: "startOAuth" });
 
     if (!response?.ok) {
       throw new Error(response?.error || "Failed to connect to Linear.");
@@ -57,10 +45,7 @@ refreshButton.addEventListener("click", async () => {
   setBusy(true);
 
   try {
-    await chrome.storage.local.set({
-      linearClientId: clientIdInput.value.trim(),
-      openIssueAfterCreate: openIssueInput.checked
-    });
+    await chrome.storage.local.set({ openIssueAfterCreate: openIssueInput.checked });
 
     const response = await chrome.runtime.sendMessage({ type: "refreshTeams" });
     if (!response?.ok) {
@@ -85,7 +70,7 @@ disconnectButton.addEventListener("click", async () => {
       throw new Error(response?.error || "Failed to disconnect from Linear.");
     }
 
-    authSummaryNode.textContent = "Not connected. Save your client ID and connect to Linear.";
+    authSummaryNode.textContent = "Not connected. Use the button above to connect to Linear.";
     renderTeams([]);
     renderStatus("Disconnected from Linear and cleared cached teams.", false);
   } catch (error) {
@@ -105,15 +90,17 @@ async function initialize() {
       throw new Error(response?.error || "Failed to load extension settings.");
     }
 
-    const { linearClientId, teams, openIssueAfterCreate, isAuthenticated, viewer } = response.settings;
-    clientIdInput.value = linearClientId || "";
+    const { teams, openIssueAfterCreate, isAuthenticated, viewer, hasConfiguredClientId } = response.settings;
     openIssueInput.checked = openIssueAfterCreate;
     renderTeams(teams);
+    clientIdNoteNode.textContent = hasConfiguredClientId
+      ? "This public build uses Softspring's shared Linear OAuth app."
+      : "This build is not configured yet. Replace the placeholder client ID in background.js before publishing.";
 
     if (isAuthenticated && viewer) {
       renderConnectedState(viewer);
     } else {
-      authSummaryNode.textContent = "Not connected. Save your client ID and connect to Linear.";
+      authSummaryNode.textContent = "Not connected. Use the button below to connect to Linear.";
     }
   } catch (error) {
     renderStatus(getErrorMessage(error), true);
@@ -158,7 +145,7 @@ function renderStatus(message, isError) {
 }
 
 function setBusy(isBusy) {
-  for (const element of [clientIdInput, openIssueInput, connectButton, refreshButton, disconnectButton]) {
+  for (const element of [openIssueInput, connectButton, refreshButton, disconnectButton]) {
     element.disabled = isBusy;
   }
 }

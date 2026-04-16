@@ -3,6 +3,7 @@ const LINEAR_OAUTH_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_OAUTH_TOKEN_URL = "https://api.linear.app/oauth/token";
 const LINEAR_OAUTH_REVOKE_URL = "https://api.linear.app/oauth/revoke";
 const LINEAR_SCOPES = ["read", "issues:create"];
+const LINEAR_CLIENT_ID = "REPLACE_WITH_SOFTSPRING_LINEAR_CLIENT_ID";
 const ROOT_MENU_ID = "send-to-linear-root";
 const SETTINGS_MENU_ID = "send-to-linear-settings";
 const TEAM_MENU_PREFIX = "send-to-linear-team:";
@@ -24,7 +25,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
     return;
   }
 
-  if (changes.oauth || changes.teams || changes.openIssueAfterCreate || changes.linearClientId) {
+  if (changes.oauth || changes.teams || changes.openIssueAfterCreate) {
     await rebuildMenus();
   }
 });
@@ -80,7 +81,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "startOAuth") {
-    authorizeWithLinear(message.clientId)
+    authorizeWithLinear()
       .then((state) => sendResponse({ ok: true, state }))
       .catch((error) => sendResponse({ ok: false, error: getErrorMessage(error) }));
     return true;
@@ -127,18 +128,17 @@ async function initialize() {
 }
 
 async function getSettingsState() {
-  const { linearClientId = "", teams = [], openIssueAfterCreate, oauth } = await chrome.storage.local.get([
-    "linearClientId",
+  const { teams = [], openIssueAfterCreate, oauth } = await chrome.storage.local.get([
     "teams",
     "openIssueAfterCreate",
     "oauth"
   ]);
 
   return {
-    linearClientId,
     teams,
     openIssueAfterCreate: openIssueAfterCreate !== false,
-    isAuthenticated: Boolean(oauth?.refreshToken && linearClientId),
+    isAuthenticated: Boolean(oauth?.refreshToken && hasConfiguredClientId()),
+    hasConfiguredClientId: hasConfiguredClientId(),
     viewer: oauth?.viewer || null
   };
 }
@@ -154,7 +154,7 @@ async function rebuildMenus() {
     contexts: ["selection"]
   });
 
-  if (!settings.linearClientId) {
+  if (!settings.hasConfiguredClientId) {
     chrome.contextMenus.create({
       id: SETTINGS_MENU_ID,
       parentId: ROOT_MENU_ID,
@@ -201,10 +201,9 @@ async function rebuildMenus() {
   });
 }
 
-async function authorizeWithLinear(clientId) {
-  const normalizedClientId = String(clientId || "").trim();
-  if (!normalizedClientId) {
-    throw new Error("Add a Linear OAuth client ID before connecting.");
+async function authorizeWithLinear() {
+  if (!hasConfiguredClientId()) {
+    throw new Error("This build is missing the Linear OAuth client ID.");
   }
 
   const redirectUri = chrome.identity.getRedirectURL("linear");
@@ -214,7 +213,7 @@ async function authorizeWithLinear(clientId) {
   const scope = LINEAR_SCOPES.join(",");
 
   const authorizationUrl = new URL(LINEAR_OAUTH_AUTHORIZE_URL);
-  authorizationUrl.searchParams.set("client_id", normalizedClientId);
+  authorizationUrl.searchParams.set("client_id", LINEAR_CLIENT_ID);
   authorizationUrl.searchParams.set("redirect_uri", redirectUri);
   authorizationUrl.searchParams.set("response_type", "code");
   authorizationUrl.searchParams.set("scope", scope);
@@ -246,7 +245,7 @@ async function authorizeWithLinear(clientId) {
   }
 
   const tokenResponse = await exchangeCodeForToken({
-    clientId: normalizedClientId,
+    clientId: LINEAR_CLIENT_ID,
     code,
     codeVerifier,
     redirectUri
@@ -255,10 +254,7 @@ async function authorizeWithLinear(clientId) {
   const viewer = await fetchViewer(tokenResponse.access_token);
   const oauthState = buildOAuthState(tokenResponse, viewer);
 
-  await chrome.storage.local.set({
-    linearClientId: normalizedClientId,
-    oauth: oauthState
-  });
+  await chrome.storage.local.set({ oauth: oauthState });
 
   await syncTeams();
 
@@ -339,9 +335,9 @@ async function fetchViewer(accessToken) {
 }
 
 async function getValidAccessToken() {
-  const { oauth, linearClientId = "" } = await chrome.storage.local.get(["oauth", "linearClientId"]);
-  if (!linearClientId) {
-    throw new Error("Configure a Linear OAuth client ID in the extension settings.");
+  const { oauth } = await chrome.storage.local.get(["oauth"]);
+  if (!hasConfiguredClientId()) {
+    throw new Error("This build is missing the Linear OAuth client ID.");
   }
 
   if (!oauth?.refreshToken) {
@@ -352,7 +348,7 @@ async function getValidAccessToken() {
     return oauth.accessToken;
   }
 
-  const refreshed = await refreshAccessToken(linearClientId, oauth.refreshToken);
+  const refreshed = await refreshAccessToken(LINEAR_CLIENT_ID, oauth.refreshToken);
   const nextState = {
     ...oauth,
     accessToken: refreshed.access_token,
@@ -488,6 +484,10 @@ function randomString(length) {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   return base64UrlEncode(bytes).slice(0, length);
+}
+
+function hasConfiguredClientId() {
+  return Boolean(LINEAR_CLIENT_ID && !LINEAR_CLIENT_ID.startsWith("REPLACE_WITH_"));
 }
 
 function deriveTitle(selectionText) {

@@ -17,20 +17,11 @@
         </p>
 
         <form id="settings-form" class="form">
-          <label class="field">
-            <span>Linear OAuth client ID</span>
-            <input
-              id="client-id"
-              name="clientId"
-              type="text"
-              autocomplete="off"
-              placeholder="Paste your Linear OAuth client ID"
-            >
-            <small class="hint">
-              Register a Linear OAuth app and add this extension redirect URL in Linear:
-              <code id="redirect-uri"></code>
-            </small>
-          </label>
+          <div class="field">
+            <span>Linear OAuth redirect URL</span>
+            <code id="redirect-uri" class="code-block"></code>
+            <small id="client-id-note" class="hint"></small>
+          </div>
 
           <p id="auth-summary" class="hint"></p>
 
