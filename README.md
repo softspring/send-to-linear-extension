@@ -1,6 +1,6 @@
 # Send To Linear
 
-Chrome extension that creates Linear issues from selected text through the right-click context menu.
+Send To Linear is a Chrome extension that creates Linear issues from selected text through the right-click context menu.
 
 ## What it does
 
@@ -21,26 +21,17 @@ The issue title is derived from the first part of the selected text. The full se
 
 ## Setup
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked**.
-4. Select the repository root folder.
-5. In your Linear OAuth app, add the extension redirect URL shown in the settings page.
-6. Reload the unpacked extension.
-7. Open the extension settings from the extension icon.
-8. Click **Connect to Linear**.
-9. Approve access and then refresh teams if needed.
+1. Install Send To Linear from the Chrome Web Store.
+2. Open the extension settings from the extension icon.
+3. Click **Connect to Linear**.
+4. Approve access to your Linear account.
+5. Refresh teams if needed.
 
-## Public listing assets
+## Support and privacy
 
-- Landing page source: [`site/index.html`](site/index.html)
-- Privacy policy source: [`site/privacy.html`](site/privacy.html)
-- Support page source: [`site/support.html`](site/support.html)
-- Icon source: [`assets/icon.svg`](assets/icon.svg)
-- Screenshot mockups: [`screenshots/`](screenshots)
-- Live landing page: `https://softspring.github.io/send-to-linear-extension/`
-- Live privacy policy: `https://softspring.github.io/send-to-linear-extension/privacy.html`
-- Live support page: `https://softspring.github.io/send-to-linear-extension/support.html`
+- Homepage: `https://softspring.github.io/send-to-linear-extension/`
+- Privacy policy: `https://softspring.github.io/send-to-linear-extension/privacy.html`
+- Support: `https://softspring.github.io/send-to-linear-extension/support.html`
 
 ## Notes
 
@@ -48,12 +39,3 @@ The issue title is derived from the first part of the selected text. The full se
 - It also uses Linear OAuth endpoints at `https://linear.app/oauth/authorize` and `https://api.linear.app/oauth/token`.
 - The requested scopes are `read` and `issues:create`.
 - Chrome context menus only work on standard web pages. Restricted Chrome pages such as `chrome://` are excluded by Chrome itself.
-
-## GitHub Pages
-
-- The repo includes a GitHub Pages workflow at `.github/workflows/deploy-pages.yml`.
-- GitHub Pages is already enabled for this repository.
-- The public site URLs are:
-- `https://softspring.github.io/send-to-linear-extension/`
-- `https://softspring.github.io/send-to-linear-extension/privacy.html`
-- `https://softspring.github.io/send-to-linear-extension/support.html`
