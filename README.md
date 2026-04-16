@@ -46,3 +46,11 @@ The issue title is derived from the first part of the selected text. The full se
 - It also uses Linear OAuth endpoints at `https://linear.app/oauth/authorize` and `https://api.linear.app/oauth/token`.
 - The requested scopes are `read` and `issues:create`.
 - Chrome context menus only work on standard web pages. Restricted Chrome pages such as `chrome://` are excluded by Chrome itself.
+
+## GitHub Pages
+
+- The repo includes a GitHub Pages workflow at `.github/workflows/deploy-pages.yml`.
+- Once Pages is enabled for GitHub Actions, the public site URLs will be:
+- `https://softspring.github.io/send-to-linear-extension/`
+- `https://softspring.github.io/send-to-linear-extension/privacy.html`
+- `https://softspring.github.io/send-to-linear-extension/support.html`
