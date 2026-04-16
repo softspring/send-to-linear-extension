@@ -52,7 +52,8 @@ The issue title is derived from the first part of the selected text. The full se
 ## GitHub Pages
 
 - The repo includes a GitHub Pages workflow at `.github/workflows/deploy-pages.yml`.
-- Once Pages is enabled for GitHub Actions, the public site URLs will be:
+- GitHub Pages is already enabled for this repository.
+- The public site URLs are:
 - `https://softspring.github.io/send-to-linear-extension/`
 - `https://softspring.github.io/send-to-linear-extension/privacy.html`
 - `https://softspring.github.io/send-to-linear-extension/support.html`
