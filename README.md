@@ -24,7 +24,7 @@ The issue title is derived from the first part of the selected text. The full se
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this folder: `/home/tatus/Dev/ToLinear`.
+4. Select the repository root folder.
 5. In your Linear OAuth app, add the extension redirect URL shown in the settings page.
 6. Reload the unpacked extension.
 7. Open the extension settings from the extension icon.
@@ -33,11 +33,14 @@ The issue title is derived from the first part of the selected text. The full se
 
 ## Public listing assets
 
-- Landing page: `/home/tatus/Dev/ToLinear/site/index.html`
-- Privacy policy draft: `/home/tatus/Dev/ToLinear/site/privacy.html`
-- Support page: `/home/tatus/Dev/ToLinear/site/support.html`
-- Icon source: `/home/tatus/Dev/ToLinear/assets/icon.svg`
-- Screenshot mockups: `/home/tatus/Dev/ToLinear/screenshots`
+- Landing page source: [`site/index.html`](site/index.html)
+- Privacy policy source: [`site/privacy.html`](site/privacy.html)
+- Support page source: [`site/support.html`](site/support.html)
+- Icon source: [`assets/icon.svg`](assets/icon.svg)
+- Screenshot mockups: [`screenshots/`](screenshots)
+- Live landing page: `https://softspring.github.io/send-to-linear-extension/`
+- Live privacy policy: `https://softspring.github.io/send-to-linear-extension/privacy.html`
+- Live support page: `https://softspring.github.io/send-to-linear-extension/support.html`
 
 ## Notes
 
