@@ -25,12 +25,11 @@ The issue title is derived from the first part of the selected text. The full se
 2. Enable **Developer mode**.
 3. Click **Load unpacked**.
 4. Select this folder: `/home/tatus/Dev/ToLinear`.
-5. In [background.js](/home/tatus/Dev/ToLinear/background.js:1), replace `REPLACE_WITH_SOFTSPRING_LINEAR_CLIENT_ID` with your company Linear OAuth client ID.
-6. In your Linear OAuth app, add the extension redirect URL shown in the settings page.
-7. Reload the unpacked extension.
-8. Open the extension settings from the extension icon.
-9. Click **Connect to Linear**.
-10. Approve access and then refresh teams if needed.
+5. In your Linear OAuth app, add the extension redirect URL shown in the settings page.
+6. Reload the unpacked extension.
+7. Open the extension settings from the extension icon.
+8. Click **Connect to Linear**.
+9. Approve access and then refresh teams if needed.
 
 ## Public listing assets
 

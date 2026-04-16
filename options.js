@@ -95,7 +95,7 @@ async function initialize() {
     renderTeams(teams);
     clientIdNoteNode.textContent = hasConfiguredClientId
       ? "This public build uses Softspring's shared Linear OAuth app."
-      : "This build is not configured yet. Replace the placeholder client ID in background.js before publishing.";
+      : "This build is missing its Softspring Linear OAuth configuration.";
 
     if (isAuthenticated && viewer) {
       renderConnectedState(viewer);
