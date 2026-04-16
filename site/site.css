@@ -171,6 +171,22 @@ h1 {
   padding-left: 20px;
 }
 
+.credits {
+  margin: 28px 0 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.credits a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.credits a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
   .card-grid,
   .shot-grid {

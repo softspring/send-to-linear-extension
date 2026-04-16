@@ -211,6 +211,22 @@ input[type="text"] {
   font-weight: 500;
 }
 
+.credits {
+  margin: 24px 0 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.credits a {
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.credits a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 20px 14px;
