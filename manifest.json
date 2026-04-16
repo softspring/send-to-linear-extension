@@ -3,6 +3,7 @@
   "name": "Send To Linear",
   "version": "0.1.0",
   "description": "Create Linear issues from selected text in Chrome.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtO8sP5TA8hvCd6YINzjoVSavmzrXud/dp2WR+O032pqWzQPKDmqH5APYfYbba7GJFSVhJ9QUkurvcBzM0bsW6JBxG+QPFT6/zfba9MPh654vNwOh1I46pZBoxTpJKjMVWU3NYcJGLIogLlM+oVZKzkNPbPDKo/ntnj05hJIvuvSOR0djU6GhF9hM6LbRn+jzwzQ7/UrYaRieSHIbdlHoaGPhCuZtQZ8cQ63oEqEI1XCFv6mwV3SlSJhsAExQmqgUn4zuRgHu0+2r+hR7F+SI3YX7WhvdwtS9LBb4Iu8sAXzBRUHLY0YVHVtAlzQPBcJcBjBv2u3BJ4kWB1llZttCAQIDAQAB",
   "permissions": [
     "contextMenus",
     "identity",
