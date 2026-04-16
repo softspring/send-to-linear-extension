@@ -518,10 +518,10 @@ function buildDescription(selectionText, pageTitle, pageUrl) {
     "",
     sourceLines.join("\n"),
     "",
+    "---",
+    "",
     "Selected text:",
-    "```",
     normalizedSelection,
-    "```"
   ]
     .filter(Boolean)
     .join("\n");
