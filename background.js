@@ -2,11 +2,15 @@ const LINEAR_API_URL = "https://api.linear.app/graphql";
 const LINEAR_OAUTH_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_OAUTH_TOKEN_URL = "https://api.linear.app/oauth/token";
 const LINEAR_OAUTH_REVOKE_URL = "https://api.linear.app/oauth/revoke";
-const LINEAR_SCOPES = ["read", "issues:create"];
+const LINEAR_SCOPES = ["read", "write", "issues:create"];
 const LINEAR_CLIENT_ID = "3ec6bdfca0716dd125b99287787c5f32";
 const ROOT_MENU_ID = "send-to-linear-root";
 const SETTINGS_MENU_ID = "send-to-linear-settings";
 const TEAM_MENU_PREFIX = "send-to-linear-team:";
+const SHOT_ROOT_MENU_ID = "send-screenshot-to-linear-root";
+const SHOT_SETTINGS_MENU_ID = "send-screenshot-to-linear-settings";
+const SHOT_TEAM_MENU_PREFIX = "send-screenshot-to-linear-team:";
+const SHOT_MENU_CONTEXTS = ["page", "frame", "selection", "link", "image", "video", "audio"];
 
 chrome.runtime.onInstalled.addListener(async () => {
   await initialize();
@@ -31,8 +35,13 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === SETTINGS_MENU_ID) {
+  if (info.menuItemId === SETTINGS_MENU_ID || info.menuItemId === SHOT_SETTINGS_MENU_ID) {
     await chrome.runtime.openOptionsPage();
+    return;
+  }
+
+  if (String(info.menuItemId).startsWith(SHOT_TEAM_MENU_PREFIX)) {
+    await handleScreenshotMenuClick(info, tab);
     return;
   }
 
@@ -78,6 +87,50 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await notify("Send To Linear", getErrorMessage(error));
   }
 });
+
+async function handleScreenshotMenuClick(info, tab) {
+  const teamId = String(info.menuItemId).slice(SHOT_TEAM_MENU_PREFIX.length);
+  const selectionText = typeof info.selectionText === "string" ? info.selectionText.trim() : "";
+
+  try {
+    const { teams = [], openIssueAfterCreate = true } = await chrome.storage.local.get([
+      "teams",
+      "openIssueAfterCreate"
+    ]);
+
+    const token = await getValidAccessToken();
+    const team = teams.find((entry) => entry.id === teamId);
+    if (!team) {
+      await notify("Send To Linear", "That team is no longer cached. Refresh teams in settings.");
+      return;
+    }
+
+    const dataUrl = await captureVisibleTabScreenshot(tab);
+    const blob = dataUrlToBlob(dataUrl);
+    const assetUrl = await uploadImageToLinear({
+      accessToken: token,
+      blob,
+      filename: `screenshot-${new Date().toISOString().replace(/[:.]/g, "-")}.png`
+    });
+
+    const issue = await createIssue({
+      accessToken: token,
+      teamId,
+      selectionText,
+      pageTitle: tab?.title || "",
+      pageUrl: tab?.url || "",
+      screenshotAssetUrl: assetUrl
+    });
+
+    await notify("Send To Linear", `Created ${issue.identifier} in ${team.name} with screenshot.`);
+
+    if (openIssueAfterCreate && issue.url) {
+      await chrome.tabs.create({ url: issue.url });
+    }
+  } catch (error) {
+    await notify("Send To Linear", getErrorMessage(error));
+  }
+}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "startOAuth") {
@@ -154,12 +207,24 @@ async function rebuildMenus() {
     contexts: ["selection"]
   });
 
+  chrome.contextMenus.create({
+    id: SHOT_ROOT_MENU_ID,
+    title: "Screenshot → Linear",
+    contexts: SHOT_MENU_CONTEXTS
+  });
+
   if (!settings.hasConfiguredClientId) {
     chrome.contextMenus.create({
       id: SETTINGS_MENU_ID,
       parentId: ROOT_MENU_ID,
       title: "Configure Linear OAuth",
       contexts: ["selection"]
+    });
+    chrome.contextMenus.create({
+      id: SHOT_SETTINGS_MENU_ID,
+      parentId: SHOT_ROOT_MENU_ID,
+      title: "Configure Linear OAuth",
+      contexts: SHOT_MENU_CONTEXTS
     });
     return;
   }
@@ -171,6 +236,12 @@ async function rebuildMenus() {
       title: "Connect to Linear",
       contexts: ["selection"]
     });
+    chrome.contextMenus.create({
+      id: SHOT_SETTINGS_MENU_ID,
+      parentId: SHOT_ROOT_MENU_ID,
+      title: "Connect to Linear",
+      contexts: SHOT_MENU_CONTEXTS
+    });
     return;
   }
 
@@ -180,6 +251,12 @@ async function rebuildMenus() {
       parentId: ROOT_MENU_ID,
       title: "Refresh teams in settings",
       contexts: ["selection"]
+    });
+    chrome.contextMenus.create({
+      id: SHOT_SETTINGS_MENU_ID,
+      parentId: SHOT_ROOT_MENU_ID,
+      title: "Refresh teams in settings",
+      contexts: SHOT_MENU_CONTEXTS
     });
     return;
   }
@@ -191,6 +268,12 @@ async function rebuildMenus() {
       title: team.name,
       contexts: ["selection"]
     });
+    chrome.contextMenus.create({
+      id: `${SHOT_TEAM_MENU_PREFIX}${team.id}`,
+      parentId: SHOT_ROOT_MENU_ID,
+      title: team.name,
+      contexts: SHOT_MENU_CONTEXTS
+    });
   }
 
   chrome.contextMenus.create({
@@ -198,6 +281,12 @@ async function rebuildMenus() {
     parentId: ROOT_MENU_ID,
     title: "Settings",
     contexts: ["selection"]
+  });
+  chrome.contextMenus.create({
+    id: SHOT_SETTINGS_MENU_ID,
+    parentId: SHOT_ROOT_MENU_ID,
+    title: "Settings",
+    contexts: SHOT_MENU_CONTEXTS
   });
 }
 
@@ -286,9 +375,9 @@ async function syncTeams() {
   return teams;
 }
 
-async function createIssue({ accessToken, teamId, selectionText, pageTitle, pageUrl }) {
-  const title = deriveTitle(selectionText);
-  const description = buildDescription(selectionText, pageTitle, pageUrl);
+async function createIssue({ accessToken, teamId, selectionText, pageTitle, pageUrl, screenshotAssetUrl }) {
+  const title = selectionText ? deriveTitle(selectionText) : derivePageTitle(pageTitle);
+  const description = buildDescription(selectionText, pageTitle, pageUrl, screenshotAssetUrl);
   const mutation = `
     mutation CreateIssue($input: IssueCreateInput!) {
       issueCreate(input: $input) {
@@ -501,8 +590,8 @@ function deriveTitle(selectionText) {
   return `${firstLine.slice(0, 77).trimEnd()}...`;
 }
 
-function buildDescription(selectionText, pageTitle, pageUrl) {
-  const normalizedSelection = selectionText.trim();
+function buildDescription(selectionText, pageTitle, pageUrl, screenshotAssetUrl) {
+  const normalizedSelection = (selectionText || "").trim();
   const sourceLines = [];
 
   if (pageTitle) {
@@ -513,18 +602,109 @@ function buildDescription(selectionText, pageTitle, pageUrl) {
     sourceLines.push(`- Source URL: ${pageUrl}`);
   }
 
-  return [
-    "Created from Chrome selected text.",
-    "",
+  const sections = [
+    screenshotAssetUrl ? "Created from a Chrome tab screenshot." : "Created from Chrome selected text.",
     sourceLines.join("\n"),
-    "",
-    "---",
-    "",
-    "Selected text:",
-    normalizedSelection,
-  ]
-    .filter(Boolean)
-    .join("\n");
+    "---"
+  ];
+
+  if (screenshotAssetUrl) {
+    sections.push(`![Screenshot](${screenshotAssetUrl})`);
+  }
+
+  if (normalizedSelection) {
+    sections.push("Selected text:", normalizedSelection);
+  }
+
+  return sections.filter((section) => section.length > 0).join("\n\n");
+}
+
+function derivePageTitle(pageTitle) {
+  const normalized = normalizeWhitespace(pageTitle || "");
+  if (!normalized) {
+    return "Screenshot from Chrome";
+  }
+
+  if (normalized.length <= 80) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, 77).trimEnd()}...`;
+}
+
+async function captureVisibleTabScreenshot(tab) {
+  let windowId = tab?.windowId;
+  if (typeof windowId !== "number") {
+    const currentWindow = await chrome.windows.getCurrent();
+    windowId = currentWindow.id;
+  }
+
+  try {
+    return await chrome.tabs.captureVisibleTab(windowId, { format: "png" });
+  } catch (_error) {
+    throw new Error("Could not capture this tab. Chrome internal pages and the Web Store cannot be screenshotted.");
+  }
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, base64] = dataUrl.split(",");
+  const mimeMatch = /data:([^;]+)/.exec(header || "");
+  const contentType = mimeMatch?.[1] || "image/png";
+  const binary = atob(base64 || "");
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new Blob([bytes], { type: contentType });
+}
+
+async function uploadImageToLinear({ accessToken, blob, filename }) {
+  const mutation = `
+    mutation FileUpload($contentType: String!, $filename: String!, $size: Int!) {
+      fileUpload(contentType: $contentType, filename: $filename, size: $size) {
+        success
+        uploadFile {
+          uploadUrl
+          assetUrl
+          headers {
+            key
+            value
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await fetchGraphQL(accessToken, mutation, {
+    contentType: blob.type || "image/png",
+    filename,
+    size: blob.size
+  });
+
+  const uploadFile = data.fileUpload?.uploadFile;
+  if (!data.fileUpload?.success || !uploadFile?.uploadUrl || !uploadFile?.assetUrl) {
+    throw new Error("Linear did not return an upload target for the screenshot.");
+  }
+
+  const headers = new Headers();
+  headers.set("Content-Type", blob.type || "image/png");
+  headers.set("Cache-Control", "public, max-age=31536000");
+  for (const header of uploadFile.headers || []) {
+    headers.set(header.key, header.value);
+  }
+
+  const uploadResponse = await fetch(uploadFile.uploadUrl, {
+    method: "PUT",
+    headers,
+    body: blob
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error(`Screenshot upload failed with status ${uploadResponse.status}. If you connected before the screenshot feature existed, disconnect and reconnect to Linear (uploads need the write scope).`);
+  }
+
+  return uploadFile.assetUrl;
 }
 
 function normalizeWhitespace(value) {
